@@ -1,40 +1,67 @@
-# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
-# SPDX-License-Identifier: Apache-2.0
+# test_monobit.py
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
-
+from cocotb.triggers import RisingEdge, Timer
+import random
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
+async def monobit_test(dut):
+    """Test the monobit module."""
 
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
-    cocotb.start_soon(clock.start())
+    # initialization
+    dut.clk <= 0
+    dut.rst_n <= 0
+    dut.ena <= 0
+    dut.ui_in <= 0
+    dut.uio_in <= 0
+    dut.uio_oe <= 0xFF 
 
-    # Reset
-    dut._log.info("Reset")
-    dut.ena.value = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
+    # generate clock
+    clock = Clock(dut.clk, 10, units="ns")  # 10ns clock period
+    cocotb.fork(clock.start())
 
-    dut._log.info("Test project behavior")
+    # reset
+    await Timer(20, units='ns')
+    dut.rst_n <= 1
+    await RisingEdge(dut.clk)
+    dut.ena <= 1
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+    # set uio_oe[0] as input
+    dut.uio_oe[0] <= 0 
+    await RisingEdge(dut.clk)
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+    # prepare for the test parameter
+    N_TESTS = 65536
+    bit_stream = []
+    for i in range(N_TESTS):
+        if i > 3:
+            rnd = i % 2
+        else:
+            rnd = 0
+        bit_stream.append(rnd)
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
+    # send bitstream to the DUT
+    for bit in bit_stream:
+        dut.uio_in[0] <= bit
+        await RisingEdge(dut.clk)
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    # waiting for the final output valid
+    for _ in range(10):
+        await RisingEdge(dut.clk)
+
+    # read result
+    is_random = dut.uo_out[0].value.integer  # set uo_out[0] as is_random
+    valid = dut.uo_out[1].value.integer      # set uo_out[1] as valid
+
+    # print result
+    cocotb.log.info(f"valid: {valid} \t random: {is_random}")
+
+    # assert check
+    if valid:
+        if is_random:
+            cocotb.log.info("The bit stream passed the monobit test.")
+        else:
+            cocotb.log.info("The bit stream failed the monobit test.")
+    else:
+        cocotb.log.warning("The result is not valid yet.")

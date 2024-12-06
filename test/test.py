@@ -1,67 +1,71 @@
-# test_monobit.py
+# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
+# SPDX-License-Identifier: Apache-2.0
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import ClockCycles
 import random
 
 @cocotb.test()
-async def monobit_test(dut):
-    """Test the monobit module."""
+async def test_project_constrained_random(dut):
+    """Constrained random test for tt_um_example design."""
 
-    # initialization
-    dut.clk <= 0
-    dut.rst_n <= 0
-    dut.ena <= 0
-    dut.ui_in <= 0
-    dut.uio_in <= 0
-    dut.uio_oe <= 0xFF 
+    # Create a 10us period clock on dut.clk
+    clock = Clock(dut.clk, 10, units="us")
+    cocotb.start_soon(clock.start())
 
-    # generate clock
-    clock = Clock(dut.clk, 10, units="ns")  # 10ns clock period
-    cocotb.fork(clock.start())
+    # Apply reset
+    dut._log.info("Applying reset")
+    dut.ena.value = 0
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst_n.value = 1
+    dut.ena.value = 1
 
-    # reset
-    await Timer(20, units='ns')
-    dut.rst_n <= 1
-    await RisingEdge(dut.clk)
-    dut.ena <= 1
+    # Wait after reset
+    await ClockCycles(dut.clk, 10)
 
-    # set uio_oe[0] as input
-    dut.uio_oe[0] <= 0 
-    await RisingEdge(dut.clk)
+    # Define your constraints:
+    # For example:
+    #  - ui_in must be even
+    #  - uio_in must be greater than ui_in
+    #  - both are 8-bit values
+    # You can choose your own constraints as needed for your logic.
+    NUM_TESTS = 100
 
-    # prepare for the test parameter
-    N_TESTS = 65536
-    bit_stream = []
-    for i in range(N_TESTS):
-        if i > 3:
-            rnd = i % 2
-        else:
-            rnd = 0
-        bit_stream.append(rnd)
+    for i in range(NUM_TESTS):
+        # Generate random values and apply constraints:
+        # Start by generating random values until they satisfy constraints
+        # Constraint: ui_in is even, and uio_in > ui_in
+        ui_candidate = random.randint(0, 255)
+        # ensure ui_in is even
+        if ui_candidate % 2 != 0:
+            ui_candidate += 1
+            if ui_candidate > 255:
+                ui_candidate = 254  # wrap around if we went out of range
 
-    # send bitstream to the DUT
-    for bit in bit_stream:
-        dut.uio_in[0] <= bit
-        await RisingEdge(dut.clk)
+        # For uio_in, let's say uio_in must be greater than ui_in
+        # We pick a random value between ui_candidate and 255
+        uio_candidate = random.randint(ui_candidate, 255)
 
-    # waiting for the final output valid
-    for _ in range(10):
-        await RisingEdge(dut.clk)
+        dut.ui_in.value = ui_candidate
+        dut.uio_in.value = uio_candidate
 
-    # read result
-    is_random = dut.uo_out[0].value.integer  # set uo_out[0] as is_random
-    valid = dut.uo_out[1].value.integer      # set uo_out[1] as valid
+        dut._log.info(f"Test {i}: ui_in={ui_candidate}, uio_in={uio_candidate}")
 
-    # print result
-    cocotb.log.info(f"valid: {valid} \t random: {is_random}")
+        # Wait for output to settle on next clock cycle
+        await ClockCycles(dut.clk, 1)
 
-    # assert check
-    if valid:
-        if is_random:
-            cocotb.log.info("The bit stream passed the monobit test.")
-        else:
-            cocotb.log.info("The bit stream failed the monobit test.")
-    else:
-        cocotb.log.warning("The result is not valid yet.")
+        # Now implement a check based on expected behavior:
+        # For demonstration, if your DUT just sums ui_in and uio_in:
+        expected = ui_candidate + uio_candidate
+        # Since both are 8-bit, if there's wrapping logic, you may want to mod by 256:
+        expected = expected & 0xFF
+
+        # Check the output
+        got = dut.uo_out.value.integer
+        assert got == expected, f"Test {i} Failed: ui_in={ui_candidate}, uio_in={uio_candidate}, expected={expected}, got={got}"
+
+    dut._log.info("Constrained random test completed successfully.")

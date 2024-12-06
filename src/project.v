@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2024 Dennis Du & Rick Gao
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,18 +10,47 @@ module tt_um_example (
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
     output wire [7:0] uio_out,  // IOs: Output path
-    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 0=input, 1=output)
-    input  wire       ena,      // always 1 when the design is powered, so you can ignore it
+    output wire [7:0] uio_oe,   // IOs: Enable path (1=output)
+    input  wire       ena,      // always 1 when powered
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  // Monobit signals
+  wire is_random_rsc_dat;
+  wire is_random_triosy_lz;
+  wire valid_rsc_dat;
+  wire valid_triosy_lz;
+  wire epsilon_triosy_lz;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+    // use ui_in[0] as epsilon_rsc_dat
+  wire epsilon_rsc_dat = ui_in[0];
+
+  monobit monobit_inst (
+      .clk                  (clk),
+      .rst                  (~rst_n), // 将低电平有效的 rst_n 转为高电平有效
+      .is_random_rsc_dat    (is_random_rsc_dat),
+      .is_random_triosy_lz  (is_random_triosy_lz),
+      .valid_rsc_dat        (valid_rsc_dat),
+      .valid_triosy_lz      (valid_triosy_lz),
+      .epsilon_rsc_dat      (epsilon_rsc_dat),
+      .epsilon_triosy_lz    (epsilon_triosy_lz)
+  );
+
+  // output port：monobit result to uo_out
+  // uo_out: 0 - is_random_rsc_dat
+  //          1 - valid_rsc_dat
+  //          2 - is_random_triosy_lz
+  //          3 - valid_triosy_lz
+  //          4 - epsilon_triosy_lz
+  // keep else as 0
+  assign uo_out = {3'b000, epsilon_triosy_lz, valid_triosy_lz, is_random_triosy_lz, valid_rsc_dat, is_random_rsc_dat};
+
+  // NOT USING uio_out and uio_oe
+  assign uio_out = 8'b00000000;
+  assign uio_oe  = 8'b00000000;
+
+  // list all unused port avoid warning
+  wire _unused = &{ena, uio_in, 1'b0};
 
 endmodule

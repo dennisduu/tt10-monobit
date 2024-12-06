@@ -28,7 +28,7 @@ module tt_um_example (
 
   monobit monobit_inst (
       .clk                  (clk),
-      .rst                  (~rst_n), // 将低电平有效的 rst_n 转为高电平有效
+      .rst                  (~rst_n), //convert rst to rstn
       .is_random_rsc_dat    (is_random_rsc_dat),
       .is_random_triosy_lz  (is_random_triosy_lz),
       .valid_rsc_dat        (valid_rsc_dat),
@@ -38,11 +38,11 @@ module tt_um_example (
   );
 
   // output port：monobit result to uo_out
-  // uo_out: 0 - is_random_rsc_dat
-  //          1 - valid_rsc_dat
-  //          2 - is_random_triosy_lz
-  //          3 - valid_triosy_lz
-  //          4 - epsilon_triosy_lz
+  // uo_out:  3 - is_random_rsc_dat
+  //          4 - valid_rsc_dat
+  //          5 - is_random_triosy_lz
+  //          6 - valid_triosy_lz
+  //          7 - epsilon_triosy_lz
   // keep else as 0
   assign uo_out = {3'b000, epsilon_triosy_lz, valid_triosy_lz, is_random_triosy_lz, valid_rsc_dat, is_random_rsc_dat};
 

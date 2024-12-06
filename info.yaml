@@ -22,7 +22,7 @@ project:
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
   # Inputs
-  ui[0]: ""
+  ui[0]: "epsilon_rsc_dat"
   ui[1]: ""
   ui[2]: ""
   ui[3]: ""
@@ -35,11 +35,11 @@ pinout:
   uo[0]: ""
   uo[1]: ""
   uo[2]: ""
-  uo[3]: ""
-  uo[4]: ""
-  uo[5]: ""
-  uo[6]: ""
-  uo[7]: ""
+  uo[3]: "epsilon_triosy_lz"
+  uo[4]: "valid_triosy_lz"
+  uo[5]: "is_random_triosy_lz"
+  uo[6]: "valid_rsc_dat"
+  uo[7]: "is_random_rsc_dat"
 
   # Bidirectional pins
   uio[0]: ""

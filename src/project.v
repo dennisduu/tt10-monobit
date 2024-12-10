@@ -47,6 +47,7 @@ module tt_um_monobit (
   // keep else as 0
   assign uo_out = {3'b000, epsilon_triosy_lz, valid_triosy_lz, is_random_triosy_lz, valid_rsc_dat, is_random_rsc_dat};
 
+
   // NOT USING uio_out and uio_oe
   assign uio_out = 8'b00000000;
   assign uio_oe  = 8'b00000000;

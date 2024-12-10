@@ -1,55 +1,82 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles
 import random
 
 @cocotb.test()
-async def test_tt_um_monobit(dut):
-    """Testbench for the tt_um_monobit module."""
-
-    # Create a 10 ns period clock (100 MHz) on dut.clk
+async def test_monobit(dut):
+    """
+    Test the monobit design for corner cases (all 1s and all 0s) and random sequences.
+    Validate results after 128 cycles.
+    """
+    # Create a 10ns clock (100 MHz)
     clock = Clock(dut.clk, 10, units="ns")
     cocotb.start_soon(clock.start())
 
-    # Apply reset
-    dut._log.info("Applying reset")
-    dut.rst_n.value = 0
-    dut.ena.value = 0
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    dut.ena.value = 1
+    # Reset the design
+    dut.rst <= 1
+    dut.epsilon_rsc_dat <= 0
+    await ClockCycles(dut.clk, 5)  # Hold reset for 5 clock cycles
+    dut.rst <= 0
 
-    # Wait for a few clock cycles after reset
-    await ClockCycles(dut.clk, 5)
+    # Configuration for the test
+    NUM_SEQUENCES = 10  # Number of sequences to test
+    SEQUENCE_LENGTH = 128  # Each sequence contains 128 bits
+    corner_cases = [
+        [1] * SEQUENCE_LENGTH,  # All 1s
+        [0] * SEQUENCE_LENGTH   # All 0s
+    ]
+    random_sequences = [[random.randint(0, 1) for _ in range(SEQUENCE_LENGTH)] for _ in range(NUM_SEQUENCES)]
 
-    NUM_TESTS = 100  # Number of test iterations
+    # Combine corner cases and random sequences
+    test_sequences = corner_cases + random_sequences
 
-    for i in range(NUM_TESTS):
-        # Generate random input bit for ui_in[0] (epsilon_rsc_dat)
-        epsilon_bit = random.randint(0, 1)
-        dut.ui_in.value = epsilon_bit
+    # Python storage for results
+    results = []
 
-        dut._log.info(f"Test {i}: epsilon_rsc_dat={epsilon_bit}")
+    for idx, sequence in enumerate(test_sequences):
+        dut._log.info(f"Testing sequence {idx + 1}/{len(test_sequences)}: {sequence}")
 
-        # Wait for one clock cycle
+        # Apply the sequence bit by bit
+        for bit in sequence:
+            dut.epsilon_rsc_dat <= bit
+            await RisingEdge(dut.clk)
+
+        # Wait for outputs to settle after 128 cycles
         await ClockCycles(dut.clk, 1)
 
-        # Capture output signals
-        is_random = dut.uo_out.value & 0b1  # Bit 0
-        valid = (dut.uo_out.value >> 1) & 0b1  # Bit 1
-        is_random_triosy = (dut.uo_out.value >> 2) & 0b1  # Bit 2
-        valid_triosy = (dut.uo_out.value >> 3) & 0b1  # Bit 3
-        epsilon_triosy = (dut.uo_out.value >> 4) & 0b1  # Bit 4
+        # Capture the outputs
+        is_random = int(dut.is_random_rsc_dat.value)
+        valid = int(dut.valid_rsc_dat.value)
 
-        dut._log.info(
-            f"Output: is_random={is_random}, valid={valid}, is_random_triosy={is_random_triosy}, valid_triosy={valid_triosy}, epsilon_triosy={epsilon_triosy}"
-        )
+        # Log the results
+        result = {
+            "sequence": sequence,
+            "is_random": is_random,
+            "valid": valid
+        }
+        results.append(result)
 
-        # Perform checks
-        # Assuming `valid` indicates a valid output and `is_random` is the result to check
-        if valid:
-            assert is_random in [0, 1], f"Invalid is_random value: {is_random}"
+        # Check if the result is valid
+        if valid != 1:
+            raise AssertionError(f"Sequence {idx + 1} did not produce a valid result.")
 
-    dut._log.info("All tests completed successfully.")
+        # Log corner cases specific checks
+        if idx == 0:  # All 1s
+            expected = 0  # Non-random (sum = 128)
+            assert is_random == expected, f"Failed for all 1s. Expected {expected}, got {is_random}."
+        elif idx == 1:  # All 0s
+            expected = 0  # Non-random (sum = -128)
+            assert is_random == expected, f"Failed for all 0s. Expected {expected}, got {is_random}."
+
+    # Log results for random sequences
+    dut._log.info("Random sequence results:")
+    for idx, res in enumerate(results[2:]):  # Skip corner cases
+        dut._log.info(f"Sequence {idx + 1}: {res}")
+
+    # Output the results
+    with open("test_results.txt", "w") as f:
+        for result in results:
+            f.write(f"{result}\n")
+
+    dut._log.info("Test completed successfully.")

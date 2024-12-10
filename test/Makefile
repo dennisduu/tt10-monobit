@@ -5,7 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v, monobit.v
+PROJECT_SOURCES = project.v monobit.v
 
 ifneq ($(GATES),yes)
 

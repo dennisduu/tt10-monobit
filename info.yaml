@@ -19,6 +19,7 @@ project:
   source_files:
     - "project.v"
     - "monobit.v"
+    - ""
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
@@ -33,14 +34,14 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
-  uo[1]: ""
-  uo[2]: ""
-  uo[3]: "epsilon_triosy_lz"
-  uo[4]: "valid_triosy_lz"
-  uo[5]: "is_random_triosy_lz"
-  uo[6]: "valid_rsc_dat"
-  uo[7]: "is_random_rsc_dat"
+  uo[0]: "is_random_rsc_dat"
+  uo[1]: "valid_rsc_dat"
+  uo[2]: "is_random_triosy_lz"
+  uo[3]: "valid_triosy_lz"
+  uo[4]: "epsilon_triosy_lz"
+  uo[5]: ""
+  uo[6]: ""
+  uo[7]: ""
 
   # Bidirectional pins
   uio[0]: ""

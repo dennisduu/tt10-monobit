@@ -19,8 +19,8 @@ project:
   source_files:
     - "project.v"
     - "monobit.v"
-    # - "concat.v"
-    # - "concat_sim.v"
+    - "concat.v"
+    - "concat_sim.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:

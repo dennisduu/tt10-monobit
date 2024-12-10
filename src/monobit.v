@@ -54,17 +54,21 @@ module monobit_core_core_fsm (
 endmodule
 
 module monobit_core (
-  clk, rst, is_random_rsc_dat, valid_rsc_dat,
-      epsilon_rsc_dat
+  clk, rst, is_random_rsc_dat, is_random_triosy_lz, valid_rsc_dat, valid_triosy_lz,
+      epsilon_rsc_dat, epsilon_triosy_lz
 );
   input clk;
   input rst;
   output is_random_rsc_dat;
+  output is_random_triosy_lz;
   output valid_rsc_dat;
+  output valid_triosy_lz;
   input epsilon_rsc_dat;
+  output epsilon_triosy_lz;
 
   reg is_random_rsci_idat;
   reg valid_rsci_idat;
+  reg reg_epsilon_triosy_obj_ld_cse;
   reg [6:0] bit_count_sva;
   reg [7:0] sum_sva;
   wire [4:0] fsm_output;
@@ -115,26 +119,44 @@ module monobit_core (
     end
   end
 
+  always @(posedge clk) begin
+    if ( rst ) begin
+      reg_epsilon_triosy_obj_ld_cse <= 1'b0;
+    end
+    else begin
+      reg_epsilon_triosy_obj_ld_cse <= fsm_output[0];
+    end
+  end
+
   assign is_random_rsc_dat = is_random_rsci_idat;
   assign valid_rsc_dat = valid_rsci_idat;
+  assign is_random_triosy_lz = reg_epsilon_triosy_obj_ld_cse;
+  assign valid_triosy_lz = reg_epsilon_triosy_obj_ld_cse;
+  assign epsilon_triosy_lz = reg_epsilon_triosy_obj_ld_cse;
 
 endmodule
 
 module monobit (
-  clk, rst, is_random_rsc_dat, valid_rsc_dat,
-      epsilon_rsc_dat
+  clk, rst, is_random_rsc_dat, is_random_triosy_lz, valid_rsc_dat, valid_triosy_lz,
+      epsilon_rsc_dat, epsilon_triosy_lz
 );
   input clk;
   input rst;
   output is_random_rsc_dat;
+  output is_random_triosy_lz;
   output valid_rsc_dat;
+  output valid_triosy_lz;
   input epsilon_rsc_dat;
+  output epsilon_triosy_lz;
 
   monobit_core monobit_core_inst (
       .clk(clk),
       .rst(rst),
       .is_random_rsc_dat(is_random_rsc_dat),
+      .is_random_triosy_lz(is_random_triosy_lz),
       .valid_rsc_dat(valid_rsc_dat),
-      .epsilon_rsc_dat(epsilon_rsc_dat)
+      .valid_triosy_lz(valid_triosy_lz),
+      .epsilon_rsc_dat(epsilon_rsc_dat),
+      .epsilon_triosy_lz(epsilon_triosy_lz)
     );
 endmodule

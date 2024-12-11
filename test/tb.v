@@ -12,7 +12,7 @@ module tb ();
 
   // Testbench signals
   reg clk;
-  reg rst_n;
+  reg rst; // Changed to match the Python testbench
   reg ena;
   reg [7:0] ui_in;
   reg [7:0] uio_in;
@@ -38,7 +38,7 @@ module tb ();
       .uio_oe(uio_oe),    // IOs: Enable path (active high)
       .ena(ena),          // enable
       .clk(clk),          // clock
-      .rst_n(rst_n)       // reset (active low)
+      .rst(rst)           // reset (active high, changed to match Python testbench)
   );
 
   // Clock generation
@@ -50,13 +50,13 @@ module tb ();
   // Initialize signals
   initial begin
     ena   = 0;
-    rst_n = 0;
+    rst   = 1; // Changed to active high reset
     ui_in = 8'h00;
     uio_in = 8'h00;
 
     // Wait a bit, then release reset
     #100;
-    rst_n = 1;
+    rst   = 0; // Deassert reset
     ena   = 1;
 
     // The actual stimulus is provided by the cocotb test.py

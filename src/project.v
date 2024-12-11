@@ -38,13 +38,15 @@ module tt_um_monobit (
   );
 
   // output port：monobit result to uo_out
-  // uo_out:  3 - is_random_rsc_dat
-  //          4 - valid_rsc_dat
-  //          5 - is_random_triosy_lz
-  //          6 - valid_triosy_lz
-  //          7 - epsilon_triosy_lz
+  // uo_out:
+  // Bit 0 - is_random_rsc_dat
+  // Bit 1 - valid_rsc_dat
+  // Bit 2 - is_random_triosy_lz
+  // Bit 3 - valid_triosy_lz
+  // Bit 4 - epsilon_triosy_lz
   // keep else as 0
   assign uo_out = {3'b000, epsilon_triosy_lz, valid_triosy_lz, is_random_triosy_lz, valid_rsc_dat, is_random_rsc_dat};
+
 
   // NOT USING uio_out and uio_oe
   assign uio_out = 8'b00000000;

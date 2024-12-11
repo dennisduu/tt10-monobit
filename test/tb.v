@@ -12,7 +12,7 @@ module tb ();
 
   // Testbench signals
   reg clk;
-  reg rst; // Changed to match the Python testbench
+  reg rst_n;
   reg ena;
   reg [7:0] ui_in;
   reg [7:0] uio_in;
@@ -38,7 +38,7 @@ module tb ();
       .uio_oe(uio_oe),    // IOs: Enable path (active high)
       .ena(ena),          // enable
       .clk(clk),          // clock
-      .rst(rst)           // reset (active high, changed to match Python testbench)
+      .rst_n(rst) // Use the actual port name
   );
 
   // Clock generation

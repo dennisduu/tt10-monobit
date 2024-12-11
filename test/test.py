@@ -26,7 +26,7 @@ async def test_adder(dut):
   for i in range(65539):
     dut.ui_in.value = i % 2
     await ClockCycles(dut.clk, 1)
-    dut._log.info(uo[0])
+    print(dut.uo_out.value)
 
   dut._log.info("Test")
   dut._log.info(dut.uo_out.value)

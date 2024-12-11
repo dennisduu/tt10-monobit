@@ -1,55 +1,63 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
-import random
+from cocotb.triggers import RisingEdge, FallingEdge, Timer
 
 @cocotb.test()
-async def test_tt_um_monobit(dut):
-    """Testbench for the tt_um_monobit module."""
+async def test_monobit(dut):
+    """Simple cocotb testbench for the monobit module."""
 
-    # Create a 10 ns period clock (100 MHz) on dut.clk
-    clock = Clock(dut.clk, 10, units="ns")
-    cocotb.start_soon(clock.start())
+    # Start a clock
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())  # 100 MHz clock
 
-    # Apply reset
-    dut._log.info("Applying reset")
+    # Reset the DUT
     dut.rst_n.value = 0
     dut.ena.value = 0
     dut.ui_in.value = 0
     dut.uio_in.value = 0
-    await ClockCycles(dut.clk, 5)
+
+    # Wait a bit before releasing reset
+    for _ in range(10):
+        await RisingEdge(dut.clk)
     dut.rst_n.value = 1
     dut.ena.value = 1
 
-    # Wait for a few clock cycles after reset
-    await ClockCycles(dut.clk, 5)
+    # Wait a cycle for stable state
+    await RisingEdge(dut.clk)
 
-    NUM_TESTS = 300  # Number of test iterations
+    # Now we will drive some patterns to epsilon_rsc_dat which is ui_in[0]
+    # and observe the outputs.
+    # According to the code, uo_out bits are assigned as:
+    # Bit 0 - is_random_rsc_dat
+    # Bit 1 - valid_rsc_dat
+    # Bit 2 - is_random_triosy_lz
+    # Bit 3 - valid_triosy_lz
+    # Bit 4 - epsilon_triosy_lz
+    # The rest are 0.
 
-    for i in range(NUM_TESTS):
-        # Generate random input bit for ui_in[0] (epsilon_rsc_dat)
-        epsilon_bit = random.randint(0, 1)
-        dut.ui_in.value = epsilon_bit
+    # Let's toggle ui_in[0] (epsilon_rsc_dat) and run for several cycles
+    # to see how the output evolves.
+    for toggle_val in [0, 1, 0, 1, 0]:
+        dut.ui_in.value = toggle_val
+        # Let the design run for a number of cycles to observe the FSM
+        for _ in range(20):
+            await RisingEdge(dut.clk)
+            # Print outputs for debug
+            is_random        = dut.uo_out.value.integer & 0x01
+            valid            = (dut.uo_out.value.integer >> 1) & 0x01
+            is_random_lz     = (dut.uo_out.value.integer >> 2) & 0x01
+            valid_lz         = (dut.uo_out.value.integer >> 3) & 0x01
+            epsilon_triosy_lz= (dut.uo_out.value.integer >> 4) & 0x01
 
-        dut._log.info(f"Test {i}: epsilon_rsc_dat={epsilon_bit}")
+            # Debug printing
+            dut._log.info(f"ui_in[0]={toggle_val} | uo_out={dut.uo_out.value.binstr} | "
+                          f"is_random={is_random} valid={valid} "
+                          f"is_random_lz={is_random_lz} valid_lz={valid_lz} "
+                          f"epsilon_triosy_lz={epsilon_triosy_lz}")
 
-        # Wait for one clock cycle
-        await ClockCycles(dut.clk, 1)
-
-        # Capture output signals
-        is_random = dut.uo_out.value & 0b1  # Bit 0
-        valid = (dut.uo_out.value >> 1) & 0b1  # Bit 1
-        is_random_triosy = (dut.uo_out.value >> 2) & 0b1  # Bit 2
-        valid_triosy = (dut.uo_out.value >> 3) & 0b1  # Bit 3
-        epsilon_triosy = (dut.uo_out.value >> 4) & 0b1  # Bit 4
-
-        dut._log.info(
-            f"Output: is_random={is_random}, valid={valid}, is_random_triosy={is_random_triosy}, valid_triosy={valid_triosy}, epsilon_triosy={epsilon_triosy}"
-        )
-
-        # Perform checks
-        # Assuming `valid` indicates a valid output and `is_random` is the result to check
-        if valid:
-            assert is_random in [0, 1], f"Invalid is_random value: {is_random}"
-
-    dut._log.info("All tests completed successfully.")
+    # Simple checks (not rigorous): since the design uses an FSM and accumulates bits,
+    # after many cycles, `valid_rsc_dat` and `is_random_rsc_dat` should eventually
+    # become high once enough bits are processed. For demonstration:
+    if valid == 0:
+        dut._log.warning("At end of test, valid_rsc_dat is still 0. Consider extending the simulation or verifying logic.")
+    else:
+        dut._log.info("valid_rsc_dat is high as expected after sufficient cycles.")

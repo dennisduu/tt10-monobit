@@ -26,7 +26,7 @@ module tb ();
 `endif
 
   // Instantiate the DUT (Device Under Test)
-  tt_um_example user_project (
+  tt_um_monobit user_project (
 `ifdef GL_TEST
       .VPWR(VPWR),
       .VGND(VGND),

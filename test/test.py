@@ -14,9 +14,9 @@ async def test_monobit(dut):
     cocotb.start_soon(clock.start())
 
     # Reset the design
-    dut.rst <= 1
+    dut.rst_n <= 0
     await ClockCycles(dut.clk, 5)  # Hold reset for 5 clock cycles
-    dut.rst <= 0
+    dut.rst_n <= 1
 
     # Configuration for the test
     SEQUENCE_LENGTH = 128  # Each sequence contains 128 bits

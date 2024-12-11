@@ -13,10 +13,10 @@ async def test_monobit_serial(dut):
 
     # Apply reset
     dut._log.info("Applying reset")
-    dut.rst.value = 1
+    dut.rst_n.value = 0
     dut.epsilon_rsc_dat.value = 0
     await ClockCycles(dut.clk, 5)
-    dut.rst.value = 0
+    dut.rst_n.value = 1
 
     NUM_TESTS = 10  # Number of test iterations
 

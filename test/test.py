@@ -39,7 +39,7 @@ async def test_monobit(dut):
     for toggle_val in [0, 1, 0, 1, 0]:
         dut.ui_in.value = toggle_val
         # Let the design run for a number of cycles to observe the FSM
-        for _ in range(20):
+        for _ in range(100):
             await RisingEdge(dut.clk)
             # Print outputs for debug
             is_random        = dut.uo_out.value.integer & 0x01

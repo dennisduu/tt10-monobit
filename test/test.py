@@ -5,7 +5,7 @@ import random
 
 @cocotb.test()
 async def test_tt_um_monobit(dut):
-    """Testbench for the tt_um_monobit module."""
+    """Testbench for the tt_um_monobit module with 128-bit input."""
 
     # Create a 10 ns period clock (100 MHz) on dut.clk
     clock = Clock(dut.clk, 10, units="ns")
@@ -27,29 +27,39 @@ async def test_tt_um_monobit(dut):
     NUM_TESTS = 300  # Number of test iterations
 
     for i in range(NUM_TESTS):
-        # Generate random input bit for ui_in[0] (epsilon_rsc_dat)
-        epsilon_bit = random.randint(0, 1)
-        dut.ui_in.value = epsilon_bit
+        # Generate constrained random input patterns
+        # Example: 3:7, 4:6, 5:5 ratios of 1s to 0s
+        num_ones = random.choice([38, 51, 64])  # Adjust these values for different ratios
+        bits = [1] * num_ones + [0] * (128 - num_ones)
+        random.shuffle(bits)  # Shuffle to randomize the positions of 1s and 0s
 
-        dut._log.info(f"Test {i}: epsilon_rsc_dat={epsilon_bit}")
+        # Convert bits to a single integer for ui_in
+        epsilon_input = int("".join(map(str, bits)), 2)
+        dut.ui_in.value = epsilon_input
+
+        dut._log.info(f"Test {i}: epsilon_input={bin(epsilon_input)}")
 
         # Wait for one clock cycle
         await ClockCycles(dut.clk, 1)
 
+        # Count number of 1s and 0s in the input
+        count_ones = bits.count(1)
+        count_zeros = bits.count(0)
+        diff = abs(count_ones - count_zeros)
+
         # Capture output signals
         is_random = dut.uo_out.value & 0b1  # Bit 0
         valid = (dut.uo_out.value >> 1) & 0b1  # Bit 1
-        is_random_triosy = (dut.uo_out.value >> 2) & 0b1  # Bit 2
-        valid_triosy = (dut.uo_out.value >> 3) & 0b1  # Bit 3
-        epsilon_triosy = (dut.uo_out.value >> 4) & 0b1  # Bit 4
 
         dut._log.info(
-            f"Output: is_random={is_random}, valid={valid}, is_random_triosy={is_random_triosy}, valid_triosy={valid_triosy}, epsilon_triosy={epsilon_triosy}"
+            f"Output: is_random={is_random}, valid={valid}, count_ones={count_ones}, count_zeros={count_zeros}, diff={diff}"
         )
 
         # Perform checks
-        # Assuming `valid` indicates a valid output and `is_random` is the result to check
         if valid:
-            assert is_random in [0, 1], f"Invalid is_random value: {is_random}"
+            expected_is_random = 1 if diff <= 29 else 0
+            assert is_random == expected_is_random, (
+                f"Mismatch: expected is_random={expected_is_random}, got {is_random}"
+            )
 
     dut._log.info("All tests completed successfully.")

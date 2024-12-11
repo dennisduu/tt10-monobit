@@ -5,7 +5,7 @@ import random
 
 
 
-TEST_LENGTH = 1000
+TEST_LENGTH = 2000
 
 
 @cocotb.test()
@@ -26,15 +26,19 @@ async def test_monobit(dut):
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 10)
+
+    cycle_counter = 0
 
     for i in range(TEST_LENGTH):
+        cycle_counter += 1
         input_bit = random.randint(0, 1)
         dut.ui_in.value = input_bit
         await Timer(1, units="ns")
         out = dut.uo_out.value
         is_random = out & 1
         is_valid  = (out >> 1) & 1
-        dut._log.info(f"input_bit: {input_bit}, is_random: {is_random}, is_valid: {is_valid}")
+        dut._log.info(f"Cycle: {cycle_counter}, input_bit: {input_bit}, is_random: {is_random}, is_valid: {is_valid}")
         await ClockCycles(dut.clk, 1)
 
     dut._log.info("All tests completed successfully.")

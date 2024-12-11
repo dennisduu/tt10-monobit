@@ -258,6 +258,7 @@ module monobit_core (
       valid_rsci_idat <= ~ unequal_tmp_1;
     end
   end
+  // check 29
   always @(posedge clk) begin
     if ( rst ) begin
       is_random_rsci_idat <= 1'b0;
@@ -393,6 +394,4 @@ module monobit (
       .epsilon_triosy_lz(epsilon_triosy_lz)
     );
 endmodule
-
-
 

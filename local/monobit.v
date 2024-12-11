@@ -185,6 +185,7 @@ endmodule
 module monobit_core (
   clk, rst, is_random_rsc_dat, is_random_triosy_lz, valid_rsc_dat, valid_triosy_lz,
       epsilon_rsc_dat, epsilon_triosy_lz
+      ,fsm_state
 );
   input clk;
   input rst;
@@ -194,6 +195,7 @@ module monobit_core (
   output valid_triosy_lz;
   input epsilon_rsc_dat;
   output epsilon_triosy_lz;
+  output [4:0] fsm_state
 
 
   // Interconnect Declarations
@@ -213,6 +215,10 @@ module monobit_core (
   wire[8:0] nl_operator_8_true_acc_nl;
   wire[6:0] operator_8_true_acc_nl_1;
   wire[7:0] nl_operator_8_true_acc_nl_1;
+
+
+  assign fsm_state = fsm_output
+
 
   // Interconnect Declarations for Component Instantiations 
   ccs_out_v1 #(.rscid(32'sd1),

@@ -5,6 +5,7 @@
 
 `default_nettype none
 
+
 module tt_um_monobit (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -18,19 +19,22 @@ module tt_um_monobit (
 
   // Monobit signals
   
-  input epsilon_rsc_dat;      // Input bit flow
+  wire epsilon_rsc_dat;         // Input bit flow
 
-  output is_random_rsc_dat;   // Output is random
-  output is_random_triosy_lz;
+  wire is_random_rsc_dat;       // Output is random
+  wire is_random_triosy_lz;
 
-  output valid_rsc_dat;       // Output is valid
-  output valid_triosy_lz;
+  wire valid_rsc_dat;           // Output is valid
+  wire valid_triosy_lz;
   
-  output epsilon_triosy_lz;
+  wire epsilon_triosy_lz;
 
 
-  // use ui_in[0] as epsilon_rsc_dat
-  wire epsilon_rsc_dat = ui_in[0];
+  wire [4:0] fsm_state;
+
+
+  // Use ui_in[0] as epsilon_rsc_dat
+  assign epsilon_rsc_dat = ui_in[0];
 
 
   monobit monobit_inst (
@@ -41,7 +45,8 @@ module tt_um_monobit (
       .valid_rsc_dat        (valid_rsc_dat),
       .valid_triosy_lz      (valid_triosy_lz),
       .epsilon_rsc_dat      (epsilon_rsc_dat),
-      .epsilon_triosy_lz    (epsilon_triosy_lz)
+      .epsilon_triosy_lz    (epsilon_triosy_lz),
+      .fsm_state            (fsm_state)
   );
 
   // output port：monobit result to uo_out
@@ -60,12 +65,19 @@ module tt_um_monobit (
   assign uo_out[5] = is_random_triosy_lz;
   assign uo_out[6] = valid_triosy_lz;
   assign uo_out[7] = epsilon_triosy_lz;
-
   
 
+  assign uio_out [4:0] = fsm_state[4:0];
+  
+
+  assign uio_out[7:5] = 3'b000;
+  assign uio_oe  = 8'b00011111;
+
+ 
   // NOT USING uio_out and uio_oe
-  assign uio_out = 8'b00000000;
-  assign uio_oe  = 8'b00000000;
+  // assign uio_out = 8'b00000000;
+  // assign uio_oe  = 8'b00000000;
+
 
   // list all unused port avoid warning
   wire _unused = &{ena, uio_in, 1'b0};

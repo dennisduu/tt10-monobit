@@ -23,12 +23,12 @@ module tt_um_monobit (
   wire valid_triosy_lz;
   wire epsilon_triosy_lz;
 
-    // use ui_in[0] as epsilon_rsc_dat
+  // 使用 ui_in[0] 做为 epsilon_rsc_dat
   wire epsilon_rsc_dat = ui_in[0];
 
   monobit monobit_inst (
       .clk                  (clk),
-      .rst                  (~rst_n), //convert rst to rstn
+      .rst                  (~rst_n), // rst 为有源高，故使用~rst_n
       .is_random_rsc_dat    (is_random_rsc_dat),
       .is_random_triosy_lz  (is_random_triosy_lz),
       .valid_rsc_dat        (valid_rsc_dat),
@@ -37,22 +37,21 @@ module tt_um_monobit (
       .epsilon_triosy_lz    (epsilon_triosy_lz)
   );
 
-  // output port：monobit result to uo_out
+  // 输出分配
   // uo_out:
   // Bit 0 - is_random_rsc_dat
   // Bit 1 - valid_rsc_dat
   // Bit 2 - is_random_triosy_lz
   // Bit 3 - valid_triosy_lz
   // Bit 4 - epsilon_triosy_lz
-  // keep else as 0
+  // 其余位清0
   assign uo_out = {3'b000, epsilon_triosy_lz, valid_triosy_lz, is_random_triosy_lz, valid_rsc_dat, is_random_rsc_dat};
 
-
-  // NOT USING uio_out and uio_oe
+  // 不使用 uio_out 和 uio_oe
   assign uio_out = 8'b00000000;
   assign uio_oe  = 8'b00000000;
 
-  // list all unused port avoid warning
+  // 将未使用信号连接以避免综合警告
   wire _unused = &{ena, uio_in, 1'b0};
 
 endmodule

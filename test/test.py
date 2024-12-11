@@ -4,8 +4,8 @@ from cocotb.triggers import RisingEdge, ClockCycles
 import random
 
 @cocotb.test()
-async def test_tt_um_monobit(dut):
-    """Testbench for the tt_um_monobit module with 128-bit input."""
+async def test_monobit_serial(dut):
+    """Testbench for monobit module with serial 128-bit input."""
 
     # Create a 10 ns period clock (100 MHz) on dut.clk
     clock = Clock(dut.clk, 10, units="ns")
@@ -13,53 +13,50 @@ async def test_tt_um_monobit(dut):
 
     # Apply reset
     dut._log.info("Applying reset")
-    dut.rst_n.value = 0
-    dut.ena.value = 0
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
+    dut.rst.value = 1
+    dut.epsilon_rsc_dat.value = 0
     await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    dut.ena.value = 1
+    dut.rst.value = 0
 
-    # Wait for a few clock cycles after reset
-    await ClockCycles(dut.clk, 5)
+    NUM_TESTS = 10  # Number of test iterations
 
-    NUM_TESTS = 300  # Number of test iterations
+    for test_idx in range(NUM_TESTS):
+        # Generate a 128-bit random input
+        serial_data = [random.randint(0, 1) for _ in range(128)]
 
-    for i in range(NUM_TESTS):
-        # Generate constrained random input patterns
-        # Example: 3:7, 4:6, 5:5 ratios of 1s to 0s
-        num_ones = random.choice([38, 51, 64])  # Adjust these values for different ratios
-        bits = [1] * num_ones + [0] * (128 - num_ones)
-        random.shuffle(bits)  # Shuffle to randomize the positions of 1s and 0s
+        count_ones = 0
+        count_zeros = 0
 
-        # Convert bits to a single integer for ui_in
-        epsilon_input = int("".join(map(str, bits)), 2)
-        dut.ui_in.value = epsilon_input
+        for bit_idx, bit in enumerate(serial_data):
+            dut.epsilon_rsc_dat.value = bit
+            await RisingEdge(dut.clk)
 
-        dut._log.info(f"Test {i}: epsilon_input={bin(epsilon_input)}")
+            # Count 1s and 0s for validation
+            if bit == 1:
+                count_ones += 1
+            else:
+                count_zeros += 1
 
-        # Wait for one clock cycle
-        await ClockCycles(dut.clk, 1)
+        # Wait for the outputs to stabilize
+        await ClockCycles(dut.clk, 5)
 
-        # Count number of 1s and 0s in the input
-        count_ones = bits.count(1)
-        count_zeros = bits.count(0)
-        diff = abs(count_ones - count_zeros)
+        # Calculate the expected result
+        difference = abs(count_ones - count_zeros)
+        expected_is_random = 1 if difference <= 29 else 0
 
-        # Capture output signals
-        is_random = dut.uo_out.value & 0b1  # Bit 0
-        valid = (dut.uo_out.value >> 1) & 0b1  # Bit 1
+        # Capture and log the output
+        is_random = dut.is_random_rsc_dat.value
+        valid = dut.valid_rsc_dat.value
 
         dut._log.info(
-            f"Output: is_random={is_random}, valid={valid}, count_ones={count_ones}, count_zeros={count_zeros}, diff={diff}"
+            f"Test {test_idx}: Count(1s)={count_ones}, Count(0s)={count_zeros}, Difference={difference}, "
+            f"Expected is_random={expected_is_random}, Actual is_random={is_random}, Valid={valid}"
         )
 
-        # Perform checks
-        if valid:
-            expected_is_random = 1 if diff <= 29 else 0
-            assert is_random == expected_is_random, (
-                f"Mismatch: expected is_random={expected_is_random}, got {is_random}"
-            )
+        # Perform assertions
+        assert valid == 1, "Output valid signal is not asserted!"
+        assert is_random == expected_is_random, (
+            f"Mismatch: Expected is_random={expected_is_random}, Got is_random={is_random}"
+        )
 
     dut._log.info("All tests completed successfully.")

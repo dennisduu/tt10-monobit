@@ -18,19 +18,19 @@ module tt_um_monobit (
 
   // Monobit signals
   
-  wire epsilon_rsc_dat;      // Input bit flow
+  wire epsilon_rsc_dat;         // Input bit flow
 
-  wire is_random_rsc_dat;   // Output is random
+  wire is_random_rsc_dat;       // Output is random
   wire is_random_triosy_lz;
 
-  wire valid_rsc_dat;       // Output is valid
+  wire valid_rsc_dat;           // Output is valid
   wire valid_triosy_lz;
   
   wire epsilon_triosy_lz;
 
 
   // use ui_in[0] as epsilon_rsc_dat
-  wire epsilon_rsc_dat = ui_in[0];
+  assign epsilon_rsc_dat = ui_in[0];
 
 
   monobit monobit_inst (

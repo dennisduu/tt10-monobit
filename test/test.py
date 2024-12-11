@@ -12,9 +12,9 @@ async def test_monobit_hls_style(dut):
     cocotb.start_soon(clock.start())
 
     # Reset the design
-    dut.rst <= 1
+    dut.rst_n <= 0
     await ClockCycles(dut.clk, 5)  # Hold reset for 5 clock cycles
-    dut.rst <= 0
+    dut.rst_n <= 1
 
     N_TESTS = 65536  # Number of tests to run
 

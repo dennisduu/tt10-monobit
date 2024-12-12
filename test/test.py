@@ -5,7 +5,6 @@ import random
 
 
 
-
 @cocotb.test()
 async def test_monobit(dut):
     """

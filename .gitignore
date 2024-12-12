@@ -9,3 +9,7 @@ test/sim_build
 test/__pycache__/
 test/results.xml
 test/gate_level_netlist.v
+local/__pycache__/test.cpython-312-pytest-8.3.4.pyc
+local/__pycache__/test.cpython-312-pytest-8.3.4.pyc
+local/results.xml
+/local/sim_build

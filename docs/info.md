@@ -13,8 +13,8 @@ The monobit test in this setup checks if a stream of 128 bits (1s and 0s) is "ra
 
 ## How to test
 
-Input 128 binary bitstream and this device will output the result. 
+Input 128 binary bitstream each bit last 5 clock cycles and this device will output the result.
 
 ## External hardware
 
-na
+No External Hardware

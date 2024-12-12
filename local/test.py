@@ -46,7 +46,7 @@ async def test_monobit(dut):
             is_random = out & 1
             is_valid  = (out >> 1) & 1
             fsm_state = dut.uio_out.value & 31
-            dut._log.info(f"is_random: {is_random}, is_valid: {is_valid}, fsm_state: {fsm_state}")
+            dut._log.info(f"            is_random: {is_random}, is_valid: {is_valid}, fsm_state: {fsm_state}")
             await ClockCycles(dut.clk, 1)
 
     dut._log.info("\nAll tests completed successfully.\n")

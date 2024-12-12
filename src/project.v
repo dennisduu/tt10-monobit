@@ -5,7 +5,6 @@
 
 `default_nettype none
 
-
 module tt_um_monobit (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -30,7 +29,7 @@ module tt_um_monobit (
   wire epsilon_triosy_lz;
 
 
-  // Use ui_in[0] as epsilon_rsc_dat
+  // use ui_in[0] as epsilon_rsc_dat
   assign epsilon_rsc_dat = ui_in[0];
 
 
@@ -61,12 +60,12 @@ module tt_um_monobit (
   assign uo_out[5] = is_random_triosy_lz;
   assign uo_out[6] = valid_triosy_lz;
   assign uo_out[7] = epsilon_triosy_lz;
-  
+
   
 
   // NOT USING uio_out and uio_oe
-  // assign uio_out = 8'b00000000;
-  // assign uio_oe  = 8'b00000000;
+  assign uio_out = 8'b00000000;
+  assign uio_oe  = 8'b00000000;
 
   // list all unused port avoid warning
   wire _unused = &{ena, uio_in, 1'b0};

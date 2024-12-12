@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1733961922" />
-    <testcase name="test_monobit" classname="test" file="/Users/rickgao/Documents/GitHub/tt10-monobit/local/test.py" lineno="11" time="0.5545639991760254" sim_time_ns="20090.001" ratio_time="36226.65919506107" />
+    <property name="random_seed" value="1733967249" />
+    <testcase name="test_monobit" classname="test" file="/Users/rickgao/Documents/GitHub/tt10-monobit/local/test.py" lineno="9" time="1.0095059871673584" sim_time_ns="32190.001" ratio_time="31886.884683392633" />
   </testsuite>
 </testsuites>
